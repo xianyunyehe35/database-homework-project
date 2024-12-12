@@ -1,12 +1,33 @@
 <script setup>
-import { ref } from 'vue'
+import { ref ,onBeforeMount} from 'vue'
 import { User,Lock } from '@element-plus/icons-vue'
+import { userStore,ReviewerStore } from '@/stores/index';
 
-const message=ref("welcome to LoginPage")
+import { Login,Reginster } from '@/api/user';
+import { ReviewerLogion } from '@/api/reviewer';
+
+import router from '@/router';
+
+
+//登录界面初始化
+ const user = userStore()
+  const reviewer=ReviewerStore()
+onBeforeMount(() => {
+ 
+  user.setIsLogin(false)
+  console.log("Updated user isLogin:", user.isLogin)
+  user.setPassword("")
+  user.setAuthorId("")
+  reviewer.setLogin(false)
+  reviewer.setPassword("")
+  reviewer.setReviewerId("")
+  
+  
+})
 
 //控制登录状态
 const userlogin=ref("true")
-const userreigister=ref("false")
+  const userreigister=ref("false")
 const changStatue=()=>{
  
     userlogin.value=!userlogin.value
@@ -17,13 +38,47 @@ const toRegister=()=>{
   userreigister.value=!userreigister.value
 }
 
-const sendLogin=()=>{
-  console.log("登录")
+
+//作者信息和函数
+//使用仓库并绑定到store中
+
+const userName=ref(user.userName)
+const passWord=ref(user.password)
+
+const authorLogin=async()=>{
+  console.log(userName.value,passWord.value)
+  const res=await Login(userName.value,passWord.value)
+ // console.log(res)
+  //console.log("登录成功")
+  user.setIsLogin(true)//说明是用户登录
+  user.setJwtToken(res.data.data.token)
+  user.setAuthorId(res.data.data.authorId)
+  user.setUserName(res.data.data.userName)
+  router.push("/userLayout")//跳转到layout页面
 }
 
-const sendRegiser=()=>{
-  console.log("注册")
+const sendRegiser=async()=>{
+  const res=  await Reginster(userName.value,passWord.value)
+  console.log(res)
+  console.log("注册成功")
+  toRegister();//返回登录界面
+
 }
+
+
+//评审人信息和函数
+
+const reviewerName=ref(reviewer.username)
+const passWord2=ref(reviewer.password)
+const reviewerLogin=async()=>{
+  const res = await ReviewerLogion(reviewerName.value, passWord2.value);
+  console.log("评审人登录成功");
+  reviewer.setLogin(true);
+  reviewer.setJwtToken(res.data.data.token);
+  reviewer.setReviewerId(res.data.data.reviewerId);
+  router.push("/reviewLayout");
+}
+
 </script>
 
 
@@ -33,7 +88,7 @@ const sendRegiser=()=>{
     <el-col :span="12" class="left" >
     </el-col>
     
-   <el-col :span="6" class="right" :offset="3">  <!-- 登陆界面右边-->
+   <el-col :span="6" class="right" :offset="3" > <!-- 登陆界面右边-->
       <div v-if="userreigister">
         
         <el-row >
@@ -48,19 +103,20 @@ const sendRegiser=()=>{
           </el-form-item>
           
           <el-form-item    >
-            <el-input  :prefix-icon="User" placeholder="用户名"/>
+            <!-- <el-input  :prefix-icon="User" placeholder="用户名"/> -->
+             <el-input  :prefix-icon="User" placeholder="用户名" v-model="userName"/>
           </el-form-item>
 
           <el-form-item    >
-            <el-input :prefix-icon="Lock"  placeholder="请输入密码" />
+            <el-input :prefix-icon="Lock"  placeholder="请输入密码" v-model="passWord" />
           </el-form-item>
 
 
           <el-form-item >
-            <div @click="toRegister" style="font-weight: 500; cursor: pointer; ">注册</div>
+            <div @click="toRegister" style="font-weight: 500; cursor: pointer; ">去注册</div>
           </el-form-item>
           <el-form-item >
-            <el-button type="primary" style="width: 100%" @click="sendLogin">登录</el-button>
+            <el-button type="primary" style="width: 100%" @click="authorLogin">登录</el-button>
           </el-form-item>
 
           <el-form-item >
@@ -75,15 +131,15 @@ const sendRegiser=()=>{
           </el-form-item>
           
           <el-form-item    >
-            <el-input  :prefix-icon="User" placeholder="用户名"/>
+            <el-input  :prefix-icon="User" placeholder="用户名" v-model="reviewerName"/>
           </el-form-item>
 
           <el-form-item    >
-            <el-input :prefix-icon="Lock"  placeholder="请输入密码" />
+            <el-input :prefix-icon="Lock"  placeholder="请输入密码" v-model="passWord2" />
           </el-form-item>
 
           <el-form-item >
-            <el-button type="primary" style="width: 100%">登录</el-button>
+            <el-button type="primary" style="width: 100%" @click="reviewerLogin">登录</el-button>
           </el-form-item>
 
           
@@ -98,19 +154,19 @@ const sendRegiser=()=>{
           </el-form-item>
           
           <el-form-item    >
-            <el-input  :prefix-icon="User" placeholder="新用户名"/>
+            <el-input  :prefix-icon="User" placeholder="新用户名" v-model="userName"/>
           </el-form-item>
 
           <el-form-item    >
-            <el-input :prefix-icon="Lock"  placeholder="请输入密码" />
+            <el-input :prefix-icon="Lock"  placeholder="请输入密码" v-model="passWord"  />
           </el-form-item>
 
           <el-form-item>
-            <div @click="toRegister" style="font-weight: 500;cursor: pointer;" > <-返回</div>
+            <div @click="toRegister" style="font-weight: 500;cursor: pointer;" > 返回</div>
           </el-form-item>
          
           <el-form-item >
-            <el-button type="primary" style="width: 100%" @click="sendRegiser">注册</el-button>
+            <el-button type="primary" style="width: 100%" @click="sendRegiser">作者注册</el-button>
           </el-form-item>
 
           
@@ -129,7 +185,7 @@ const sendRegiser=()=>{
 
 <style>
 .login {
-  height: 100vh;
+  min-height: 100vh;
  
 }
 
@@ -139,8 +195,8 @@ const sendRegiser=()=>{
 }
 
 .right {
-  
-  padding-top: 400px;
+  overflow-y: auto;
+  padding-top: 300px;
 }
 
 .form{
