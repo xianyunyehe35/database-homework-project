@@ -17,3 +17,6 @@ export const saveManuscript=async(data)=>{
     return await request.put('/manuscript/changStatus',data)
 }
 
+export const addManuscript=async(data)=>{
+    return await request.post('/manuscript/publish',data)
+}

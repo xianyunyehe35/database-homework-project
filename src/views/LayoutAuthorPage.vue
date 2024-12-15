@@ -3,7 +3,7 @@ import router from '@/router';
 import { userStore } from '@/stores';
 import { ref ,onBeforeMount} from 'vue';
 import {PageQueryList} from '@/api/pagequery'
-import { getManuscript,deleteManuscript,getTypelist,saveManuscript } from '@/api/manuscript';
+import { getManuscript,deleteManuscript,getTypelist,saveManuscript,addManuscript } from '@/api/manuscript';
 
 const user=userStore();
 const PageDto=ref({
@@ -23,7 +23,7 @@ const typelist=ref([])
 //   // console.log(res)
 // }
 
-//请求文章数据并渲染函数
+//------------请求文章数据并渲染函数
 const getTableData=async()=>{
   try {
     const res = await PageQueryList(PageDto.value);
@@ -48,7 +48,7 @@ onBeforeMount(async()=>{
 })
 
 const toLoginPage = () => {
-  router.push({ path: '/login' });
+  router.push({ path: '/' });
 };
 
 
@@ -58,51 +58,60 @@ const handDelete=async(row)=>{
   tabledata.value=tabledata.value.filter((item)=>{
     return item.manuscriptId!=row.manuscriptId
   })
-
-  
-
   //发送请求更新数据库
   await deleteManuscript(row.manuscriptId);
 }
 
 
-//处理编辑的
+//------处理编辑的
 const form=ref({
   manuscriptId:null,
   title:'',
   content:'',
-  typeId:null
+  typeId:null,
+  authorId:null
 })
 //控制抽屉显示
 const drawer=ref(false)
-
+const isEdit=ref(false)
 
 const handleEdit=async(row)=>{
   // console.log(row)
   drawer.value=true //触发弹出表单，编辑数据
-  const res=await getManuscript(row.manuscriptId)
+  isEdit.value=true
+  isAdd.value=false
+  //const res=await getManuscript(row.manuscriptId)
   // console.log(res)
 
   
-  form.value.manuscriptId=res.data.data.manuscriptId
-  form.value.title=res.data.data.title
-  form.value.content=res.data.data.content
+  form.value.manuscriptId=row.manuscriptId
+  form.value.title=row.title
+  form.value.content=row.content
   // console.log(typelist.value.filter(item => item.typeId == res.data.data.typeId)[0].typeName)
   
   //bug来源filteredType是文字而不是id
-  const filteredType = typelist.value.filter(item => item.typeId == res.data.data.typeId)[0]
-
+  const filteredType = typelist.value.filter(item => item.typeId == row.typeId)[0]
+  // console.log("filteredType")
+  // console.log(filteredType)
   if (filteredType) {
-    form.value.typeId = filteredType.typeName;
+    form.value.typeId = filteredType.typeId;
   } else {
     form.value.typeId = '';
     console.error('No matching type found');
   }
-  console.log(form.value)
+ 
 }
 
 const handleSave=async()=>{
-  console.log(form.value)
+  // console.log(form.value)
+  if(form.value.title==null){
+    ElMessage.error('请输入标题')
+    return
+  }
+  if(form.value.content==null){
+    ElMessage.error('请输入内容')
+    return
+  }
   let res=await saveManuscript(form.value)
   // console.log(res)
   drawer.value=false
@@ -113,7 +122,7 @@ const handleCancel=()=>{
   drawer.value=false
 }
 
-//处理筛选文章
+//-----------处理筛选文章
 const searchform=ref({
   title:'',
   typeId:'文学'
@@ -133,6 +142,36 @@ const sendSearch = async () => {
 const resetSearch=()=>{
   PageDto.value.title=null
   PageDto.value.typeId=null
+}
+
+//-----------处理添加文章
+
+const isAdd=ref(false)
+const handleAdd=()=>{
+  drawer.value=true
+  form.value.manuscriptId=null
+  form.value.title=null
+  form.value.content=null
+  form.value.typeId=1
+  form.value.authorId=user.authorId
+  isAdd.value=true
+  isEdit.value=false
+}
+
+const handlePublish=async()=>{
+  if(form.value.title==null){
+    ElMessage.error('请输入标题')
+    return
+  }
+  if(form.value.content==null){
+    ElMessage.error('请输入内容')
+    return
+  }
+  let res=await addManuscript(form.value)
+  drawer.value=false
+  isAdd.value=false
+
+  getTableData()
 }
 </script>
 
@@ -187,11 +226,12 @@ const resetSearch=()=>{
               <el-table-column prop="status" label="状态" > </el-table-column>
               <el-table-column  label="操作" >
                 <template #default="{row}">
-                  <div>
+                  
                     <el-button type="primary" @click="handleEdit(row)">编辑</el-button>
                     <el-button type="danger"  @click="handDelete(row)" >删除</el-button>
-                  </div>
+                
 
+                  
                 </template>
               
               </el-table-column>
@@ -214,7 +254,7 @@ const resetSearch=()=>{
           
         </el-main>
 
-        <el-drawer v-model="drawer" title="编辑稿件" size="50%">
+        <el-drawer v-model="drawer" :title="isEdit?'编辑稿件':'发布文章'" size="50%">
           <el-form :data="form">
             <el-form-item  label="标题">
               <el-input v-model="form.title" />
@@ -242,9 +282,13 @@ const resetSearch=()=>{
           </el-form>
 
           <template #footer>
-
-            <el-button @click="handleSave" type="primary">保存</el-button> 
-            <el-button @click="handleCancel">取消</el-button>
+            <div v-if="isEdit">
+              <el-button @click="handleSave" type="primary">保存</el-button> 
+              <el-button @click="handleCancel">取消</el-button>
+            </div>
+            <div v-else-if="isAdd">
+              <el-button type="primary" @click="handlePublish">发布文章</el-button>
+            </div>
           </template>
           
         </el-drawer>

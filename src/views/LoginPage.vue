@@ -73,8 +73,8 @@ const passWord2=ref(reviewer.password)
 const reviewerLogin=async()=>{
   const res = await ReviewerLogion(reviewerName.value, passWord2.value);
   console.log("评审人登录成功");
+  console.log(res)
   reviewer.setLogin(true);
-  reviewer.setJwtToken(res.data.data.token);
   reviewer.setReviewerId(res.data.data.reviewerId);
   router.push("/reviewLayout");
 }
