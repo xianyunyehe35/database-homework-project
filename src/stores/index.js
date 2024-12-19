@@ -1,6 +1,6 @@
 import {userStore} from '@/stores/user';
 
-import  {ReviewerStore} from '@/stores/reviewer';
+import  {reviewerStore} from '@/stores/reviewer';
 
 
-export {userStore, ReviewerStore}
+export {userStore, reviewerStore}

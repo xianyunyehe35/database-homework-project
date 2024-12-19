@@ -25,3 +25,11 @@ export const Reginster=async(userName,password)=>{
     return res;
 }
 
+export const updateUserInfo=async(data)=>{
+    return await request({
+        url:'/user/update',
+        method: 'post',
+        data
+    })
+}
+

@@ -8,4 +8,12 @@ export const ReviewerLogion=async (userName,password)=>{
     })
 }
 
+export const updateReviewerInfo=async(data)=>{
+    return await request({
+        url:'/reviewer/update',
+        method: 'post',
+        data
+    })
+}
+
 

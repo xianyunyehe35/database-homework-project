@@ -7,9 +7,20 @@ export const userStore = defineStore("counter", {
         password:null,
         jwtToken:null,
         isLogin:false,
+        authorFee:0,
+        email:null,
+        phone:null,
     }),
 
     actions: {
+        setUserInfo(userInfo){
+            this.userName = userInfo.userName;
+            this.email = userInfo.email;
+            this.phone = userInfo.phone;
+            this.authorFee = userInfo.authorFee;
+            this.authorId = userInfo.authorId;
+            this.jwtToken = userInfo.token;
+        },
         setUserName(name){
             this.userName = name;
         },
@@ -26,6 +37,15 @@ export const userStore = defineStore("counter", {
 
         setAuthorId(id){
             this.authorId = id;
+        },
+        setAuthorFee(fee){
+            this.authorFee = fee;
+        },
+        setPhone(phone){
+            this.phone = phone;
+        },
+        setEmail(email){
+            this.email = email;
         }
         
     },

@@ -1,7 +1,7 @@
 <script setup>
 import { ref ,onBeforeMount} from 'vue'
 import { User,Lock } from '@element-plus/icons-vue'
-import { userStore,ReviewerStore } from '@/stores/index';
+import { userStore,reviewerStore } from '@/stores/index';
 
 import { Login,Reginster } from '@/api/user';
 import { ReviewerLogion } from '@/api/reviewer';
@@ -11,7 +11,7 @@ import router from '@/router';
 
 //登录界面初始化
  const user = userStore()
-  const reviewer=ReviewerStore()
+  const reviewer=reviewerStore()
 onBeforeMount(() => {
  
   user.setIsLogin(false)
@@ -48,12 +48,11 @@ const passWord=ref(user.password)
 const authorLogin=async()=>{
   console.log(userName.value,passWord.value)
   const res=await Login(userName.value,passWord.value)
- // console.log(res)
-  //console.log("登录成功")
+ console.log(res)
+  console.log("用户登录成功")
   user.setIsLogin(true)//说明是用户登录
-  user.setJwtToken(res.data.data.token)
-  user.setAuthorId(res.data.data.authorId)
-  user.setUserName(res.data.data.userName)
+  user.setUserInfo(res.data.data)
+  console.log(user)
   router.push("/userLayout")//跳转到layout页面
 }
 
@@ -68,15 +67,19 @@ const sendRegiser=async()=>{
 
 //评审人信息和函数
 
-const reviewerName=ref(reviewer.username)
+const reviewerName=ref(reviewer.userName)
 const passWord2=ref(reviewer.password)
 const reviewerLogin=async()=>{
   const res = await ReviewerLogion(reviewerName.value, passWord2.value);
   console.log("评审人登录成功");
+  console.log("返回的数据")
   console.log(res)
   reviewer.setLogin(true);
-  reviewer.setReviewerId(res.data.data.reviewerId);
+  reviewer.setReviewerInfo(res.data.data)
+  
+  console.log(reviewer)
   router.push("/reviewLayout");
+  
 }
 
 </script>

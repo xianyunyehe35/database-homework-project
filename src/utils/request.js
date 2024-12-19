@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { userStore ,ReviewerStore} from '@/stores/index';
+import { userStore ,reviewerStore} from '@/stores/index';
 import { ElMessage } from 'element-plus';
 import  router  from '@/router/index'
 //这个是请求的基地址
@@ -17,12 +17,14 @@ const instance = axios.create({
 instance.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
     const user = userStore()
-    const reviewer = ReviewerStore()
+    const reviewer = reviewerStore()
     if(user.jwtToken&&user.isLogin){//判断是用户
+      console.log("用户请求")
       config.headers["token"] = `${user.jwtToken}`;
         console.log(user.jwtToken)
     }
     if(reviewer.token&&reviewer.isLogin){//判断是评审人
+      console.log("评审人请求")
       config.headers["token"] = `${reviewer.token}`;
     }
     return config;
@@ -35,7 +37,9 @@ instance.interceptors.request.use(function (config) {
 instance.interceptors.response.use(function (res) {
     // 对响应数据做点什么
     if (res.data.status === 200) {//res.data代表后端返回的数据
-        return res
+      console.log("操作成功") 
+      console.log(res)
+      return res
       }
       ElMessage({ message: res.data.message || '服务异常', type: 'error' })
       return Promise.reject(res.data)
