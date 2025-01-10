@@ -51,6 +51,8 @@ const getTableData=async()=>{
       };
       return item;
     });
+    console.log("请求文章数据")
+    console.log(tabledata.value)
     PageDto.value.total = res.data.data.total;
     console.log(popoverStates.value)
   } catch (error) {
@@ -201,7 +203,8 @@ const saveUserInfo=async()=>{
 //跳转账户信息
 //对外提供接口
 defineExpose({
-  getTableData
+  getTableData,
+  tabledata
 })
 
 </script>
@@ -256,6 +259,12 @@ defineExpose({
               <el-table-column prop="content" label="内容" show-overflow-tooltip> </el-table-column>
               <el-table-column prop="submissionDate" label="上传时间" > </el-table-column>
               <el-table-column prop="typeName" label="类型" > </el-table-column>
+              <el-table-column  label="评阅人" > 
+                <template #default="{row}">
+                  {{row.reviewerName ? row.reviewerName : '暂无'}}
+                </template>
+              </el-table-column>
+              <el-table-column prop="authorName" label="作者" > </el-table-column>
               <el-table-column prop="status" label="状态" > </el-table-column>
               <el-table-column  label="操作" >
                 <template #default="{row}">
@@ -371,6 +380,8 @@ defineExpose({
 .el-table{
   width:80%;
   margin:0 auto;
+  width: 100%;
+  margin: 0 auto;
   /* display: flex;
   justify-content: space-between; */
 }

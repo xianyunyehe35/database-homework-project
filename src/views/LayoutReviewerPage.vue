@@ -33,6 +33,8 @@ onBeforeMount(async()=>{
 
 //修改文章状态
 const confirmAction=async(manuscriptId,type)=>{
+  //
+  reviewer.setReviewerFee=reviewer.reviewerFee+500
   const data={
     manuscriptId:manuscriptId,
     reviewerId:reviewer.reviewerId,

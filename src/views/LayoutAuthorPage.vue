@@ -4,14 +4,15 @@ import Datashow from '@/components/Datashow.vue';
 import {ref,onBeforeMount} from 'vue'
 import { deleteManuscript,addManuscript ,getTypelist,saveManuscript} from '@/api/manuscript';
 import { userStore } from '@/stores';
+import {aliPay} from '@/api/aliPay'
 
 const render=ref(null)
 const user=userStore()
 const pageDto=ref({
   authorId:user.authorId,
   pageNum:1,
-  pageSize:3,
-  total:10,
+  pageSize:5,
+  total:0,
   title:null,
   typeId:null
 })
@@ -44,6 +45,41 @@ const handleAdd=()=>{
   
 }
 
+//添加文章的支付功能
+//关于支付功能，建立WebSocket连接，监听支付结果
+const socketUrl=`ws://localhost:8080/imserver/${user.authorId}`
+socketUrl.replace("http","ws").replace("https","ws")
+const socket=new WebSocket(socketUrl)
+
+
+socket.onopen=(event)=>{
+  console.log("WebSocket连接成功")
+}
+socket.onmessage=(event)=>{
+  console.log("收到支付结果")
+  console.log(event.data)
+  if(event.data=="success"){
+    ElMessage.success("支付成功")
+    handlePublish()
+  }else{
+    ElMessage.error("支付失败")
+  }
+
+}
+socket.close=(event)=>{
+  console.log("WebSocket连接关闭")
+}
+
+
+//发起支付
+const handlePay=async()=>{
+  const res=await aliPay(user.authorId)
+  const url=res.data.message
+  window.open(url)
+}
+
+
+
 const handlePublish=async()=>{
   if(form.value.title==null){
     ElMessage.error('请输入标题')
@@ -53,7 +89,10 @@ const handlePublish=async()=>{
     ElMessage.error('请输入内容')
     return
   }
-  let res=await addManuscript(form.value)
+
+  
+  
+  await addManuscript(form.value)
   drawer.value=false
   isAdd.value=false
 
@@ -61,14 +100,19 @@ const handlePublish=async()=>{
 }
 
 
+
 //--处理删除文章
 const handDelete=async(row)=>{
-  
-  tabledata.value=tabledata.value.filter((item)=>{
-    return item.manuscriptId!=row.manuscriptId
-  })
-  //发送请求更新数据库
   await deleteManuscript(row.manuscriptId);
+  // 检查当前页数据是否为0
+  console.log(render.value.tabledata)
+  if (render.value.tabledata.length === 1) {
+    // 如果是最后一条数据，且当前页码大于1，则自动跳转到前一页
+    if (pageDto.value.pageNum > 1) {
+      pageDto.value.pageNum--;
+    }
+  }
+  render.value.getTableData(); // 重新获取数据
 }
 
 //------处理编辑的 --不被组件化的
@@ -84,7 +128,7 @@ const drawer=ref(false)
 const isEdit=ref(false)
 
 const handleEdit=async(row)=>{
-  // console.log(row)
+  console.log(row)
   drawer.value=true //触发弹出表单，编辑数据
   isEdit.value=true
   isAdd.value=false
@@ -129,6 +173,7 @@ const handleSave=async()=>{
 const handleCancel=()=>{
   drawer.value=false
 }
+
 </script>
 
 <template>
@@ -139,7 +184,7 @@ const handleCancel=()=>{
           <h1>作者页面</h1>
         </template>
         <template #action="{row}">
-          <el-button type="primary" @click="handleEdit(row)">编辑</el-button>
+          <el-button type="primary" @click="handleEdit(row)" >编辑</el-button>
           <el-button type="danger"  @click="handDelete(row)" >删除</el-button>
         </template>
 
@@ -183,7 +228,7 @@ const handleCancel=()=>{
                 <el-button @click="handleCancel">取消</el-button>
               </div>
               <div v-else-if="isAdd">
-                <el-button type="primary" @click="handlePublish">发布文章</el-button>
+                <el-button type="primary" @click="handlePay">发布文章</el-button>
               </div>
             </template>
             
